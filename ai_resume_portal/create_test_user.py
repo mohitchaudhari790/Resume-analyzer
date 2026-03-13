@@ -15,7 +15,7 @@ from portal.models import Profile
 def create_test_user():
     # Check if user already exists
     if User.objects.filter(username='testuser').exists():
-        print("❌ Test user 'testuser' already exists!")
+        print("[INFO] Test user 'testuser' already exists!")
         print("\nLogin Credentials:")
         print("Username: testuser")
         print("Password: testpass123")
@@ -33,7 +33,7 @@ def create_test_user():
     # Create profile
     Profile.objects.create(user=user)
     
-    print("✅ Test user created successfully!")
+    print("[SUCCESS] Test user created successfully!")
     print("\n" + "="*50)
     print("LOGIN CREDENTIALS:")
     print("="*50)

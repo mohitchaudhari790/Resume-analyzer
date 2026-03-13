@@ -1,9 +1,12 @@
 from pathlib import Path
 import os
-# from dotenv import load_dotenv
-import dj_database_url
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass  # python-dotenv not installed, use environment variables
 
-# load_dotenv()  # Disabled - python-dotenv missing
+import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -59,7 +62,7 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 # Database Configuration
 if os.getenv('DATABASE_URL'):
-    # Production database (Render provides this)
+    # Production database (Render or external PostgreSQL)
     DATABASES = {
         'default': dj_database_url.config(
             default=os.getenv('DATABASE_URL'),
@@ -67,16 +70,24 @@ if os.getenv('DATABASE_URL'):
             conn_health_checks=True,
         )
     }
-else:
-    # Local development database
+elif os.getenv('DB_ENGINE'):
+    # Local PostgreSQL (if configured in .env)
     DATABASES = {
         'default': {
-            'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.postgresql'),
+            'ENGINE': os.getenv('DB_ENGINE'),
             'NAME': os.getenv('DB_NAME', 'ai_resume_db'),
             'USER': os.getenv('DB_USER', 'postgres'),
-'PASSWORD': os.getenv('DB_PASSWORD', 'postgres'),
+            'PASSWORD': os.getenv('DB_PASSWORD', 'postgre'),
             'HOST': os.getenv('DB_HOST', 'localhost'),
             'PORT': os.getenv('DB_PORT', '5432'),
+        }
+    }
+else:
+    # SQLite (default for local development)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
 
