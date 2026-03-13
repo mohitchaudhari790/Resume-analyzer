@@ -1,31 +1,13 @@
-# AI Resume Portal - Implementation TODO
+# TODO: Run AI Resume Portal Project
 
-## Phase 1: Setup & Database (High Priority)
-- [x] Update settings.py (secure SECRET_KEY, confirm PG config)
-- [ ] Complete portal/admin.py (register all models)
-- [ ] Run migrations: `python manage.py makemigrations portal && migrate`
-- [ ] Create superuser: `python manage.py createsuperuser`
-- [ ] Populate sample jobs data
+## Plan Breakdown (Approved)
+1. [x] **Run setup.bat** - Creates venv, installs requirements, migrations, superuser, sample jobs
+2. [x] **Update DB config** - Set DB_PASSWORD='postgres' in settings.py
+3. [ ] **Download spaCy model** - python -m spacy download en_core_web_sm
+4. [ ] **Verify setup** - python manage.py check
+5. [ ] **Start server** - start_server.bat or python manage.py runserver
+6. [ ] **Test access** - Visit http://127.0.0.1:8000/
+7. [ ] **Complete** - attempt_completion
 
-**Current Progress: Phase 1 ✅ Complete (setup files done). Run migrations manually next. Phase 4 UI ✅**
+**Current Step: 4/7**
 
-## Phase 2: Core Features (Auth/UI)
-- [x] Add forgot_password view/template (Django PasswordResetView)
-- [ ] Dashboard: Profile completion check/redirect
-- [ ] Enhance profile_settings validation
-
-## Phase 3: AI Enhancements
-- [ ] ai_utils.py: Integrate spaCy/NLTK, TF-IDF matching
-- [ ] Add keyword suggestions
-
-## Phase 4: UI Polish
-- [x] Create/enhance static/css/style.css (3D animations, glassmorphism)
-- [ ] static/js/script.js (Kanban drag-drop, charts)
-- [ ] Responsive design
-
-## Phase 5: Testing & Extras
-- [ ] Test full user flow
-- [ ] Instructions to run
-- [ ] Optional: Docker/deploy
-
-**Legend:** Update checkboxes as completed.

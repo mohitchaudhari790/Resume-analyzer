@@ -1,10 +1,9 @@
 from pathlib import Path
 import os
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 import dj_database_url
 
-# Load environment variables
-load_dotenv()
+# load_dotenv()  # Disabled - python-dotenv missing
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -75,7 +74,7 @@ else:
             'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.postgresql'),
             'NAME': os.getenv('DB_NAME', 'ai_resume_db'),
             'USER': os.getenv('DB_USER', 'postgres'),
-            'PASSWORD': os.getenv('DB_PASSWORD', 'postgre'),
+'PASSWORD': os.getenv('DB_PASSWORD', 'postgres'),
             'HOST': os.getenv('DB_HOST', 'localhost'),
             'PORT': os.getenv('DB_PORT', '5432'),
         }

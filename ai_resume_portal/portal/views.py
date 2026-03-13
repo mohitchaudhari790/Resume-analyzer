@@ -34,7 +34,12 @@ def user_login(request):
             user = authenticate(username=username, password=password)
             if user:
                 login(request, user)
+                messages.success(request, f'Welcome back, {username}!')
                 return redirect('dashboard')
+            else:
+                messages.error(request, 'Invalid username or password.')
+        else:
+            messages.error(request, 'Invalid username or password. Please try again.')
     else:
         form = AuthenticationForm()
     return render(request, 'portal/login.html', {'form': form})
