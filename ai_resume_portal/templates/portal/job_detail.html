@@ -1,0 +1,426 @@
+{% extends 'portal/base.html' %}
+
+{% block title %}{{ job.title }} - Job Details{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="job-detail-container">
+        <div class="job-detail-header card">
+            <div class="job-title-section">
+                <h1>{{ job.title }}</h1>
+                <div class="job-meta">
+                    <span><i class="fas fa-building"></i> {{ job.company }}</span>
+                    <span><i class="fas fa-map-marker-alt"></i> {{ job.location }}</span>
+                    <span><i class="fas fa-briefcase"></i> {{ job.get_experience_level_display }}</span>
+                </div>
+            </div>
+            
+            {% if match_score > 0 %}
+            <div class="match-score-badge">
+                <div class="match-circle {% if match_score >= 70 %}high{% elif match_score >= 50 %}medium{% else %}low{% endif %}">
+                    {{ match_score }}%
+                </div>
+                <span>Match Score</span>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="job-detail-content">
+            <div class="job-main">
+                <div class="card">
+                    <h2><i class="fas fa-file-alt"></i> Job Description</h2>
+                    <p>{{ job.description|linebreaks }}</p>
+                </div>
+                
+                <div class="card">
+                    <h2><i class="fas fa-tools"></i> Required Skills</h2>
+                    <div class="skill-tags">
+                        {% for skill in job.required_skills.split %}
+                        <span class="skill-tag">{{ skill }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h2><i class="fas fa-dollar-sign"></i> Salary Range</h2>
+                    <p class="salary-range">
+                        {% if job.salary_min and job.salary_max %}
+                        ${{ job.salary_min|floatformat:0 }} - ${{ job.salary_max|floatformat:0 }} per year
+                        {% else %}
+                        Competitive salary based on experience
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+            
+            <div class="job-sidebar">
+                <div class="card action-card">
+                    <h3>Apply Now</h3>
+                    {% if has_applied %}
+                    <button class="btn btn-success btn-block" disabled>
+                        <i class="fas fa-check"></i> Already Applied
+                    </button>
+                    {% else %}
+                    <a href="{% url 'apply_job' job.id %}" class="btn btn-primary btn-block">
+                        <i class="fas fa-paper-plane"></i> Apply for this Job
+                    </a>
+                    {% endif %}
+                    
+                    {% if is_saved %}
+                    <a href="{% url 'unsave_job' job.id %}" class="btn btn-secondary btn-block">
+                        <i class="fas fa-bookmark"></i> Saved
+                    </a>
+                    {% else %}
+                    <a href="{% url 'save_job' job.id %}" class="btn btn-outline btn-block">
+                        <i class="far fa-bookmark"></i> Save Job
+                    </a>
+                    {% endif %}
+                </div>
+                
+                <div class="card info-card">
+                    <h3><i class="fas fa-info-circle"></i> Job Information</h3>
+                    <div class="info-item">
+                        <span class="info-label">Posted:</span>
+                        <span>{{ job.posted_at|date:"M d, Y" }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Deadline:</span>
+                        <span>{{ job.deadline|date:"M d, Y" }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Experience:</span>
+                        <span>{{ job.get_experience_level_display }}</span>
+                    </div>
+                </div>
+                
+                {% if matched_skills %}
+                <div class="card skills-match-card">
+                    <h3><i class="fas fa-check-double"></i> Your Matched Skills</h3>
+                    <div class="matched-skills-list">
+                        {% for skill in matched_skills %}
+                        <span class="skill-badge matched"><i class="fas fa-check"></i> {{ skill }}</span>
+                        {% endfor %}
+                    </div>
+                    <p class="match-info">You have {{ matched_skills|length }} matching skills!</p>
+                </div>
+                {% endif %}
+                
+                {% if missing_skills %}
+                <div class="card skills-missing-card">
+                    <h3><i class="fas fa-exclamation-triangle"></i> Skills to Learn</h3>
+                    <div class="missing-skills-list">
+                        {% for skill in missing_skills %}
+                        <span class="skill-badge missing"><i class="fas fa-times"></i> {{ skill }}</span>
+                        {% endfor %}
+                    </div>
+                    <p class="tip-info"><i class="fas fa-lightbulb"></i> Learning these skills will improve your chances!</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.page-container {
+    padding: 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.job-detail-container {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.card {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+}
+
+.job-detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.job-title-section h1 {
+    font-size: 32px;
+    color: #2d3748;
+    margin: 0 0 15px 0;
+}
+
+.job-meta {
+    display: flex;
+    gap: 25px;
+    flex-wrap: wrap;
+}
+
+.job-meta span {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #718096;
+    font-size: 15px;
+}
+
+.job-meta i {
+    color: #667eea;
+}
+
+.match-score-badge {
+    text-align: center;
+}
+
+.match-circle {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: 700;
+    color: white;
+    margin: 0 auto 8px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+}
+
+.match-circle.high {
+    background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+}
+
+.match-circle.medium {
+    background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+}
+
+.match-circle.low {
+    background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+}
+
+.match-score-badge span {
+    font-size: 13px;
+    color: #718096;
+    font-weight: 600;
+}
+
+.job-detail-content {
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: 25px;
+}
+
+.job-main {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.job-main h2 {
+    font-size: 22px;
+    color: #2d3748;
+    margin: 0 0 15px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.job-main h2 i {
+    color: #667eea;
+}
+
+.skill-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.skill-tag {
+    padding: 8px 16px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.salary-range {
+    font-size: 18px;
+    color: #2d3748;
+    font-weight: 600;
+}
+
+.job-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.action-card h3, .info-card h3, .skills-match-card h3, .skills-missing-card h3 {
+    font-size: 18px;
+    color: #2d3748;
+    margin: 0 0 15px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px 20px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 15px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-block {
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+    color: white;
+}
+
+.btn-secondary {
+    background: #4a5568;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #2d3748;
+}
+
+.btn-outline {
+    background: white;
+    color: #667eea;
+    border: 2px solid #667eea;
+}
+
+.btn-outline:hover {
+    background: #667eea;
+    color: white;
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.info-item:last-child {
+    border-bottom: none;
+}
+
+.info-label {
+    font-weight: 600;
+    color: #4a5568;
+}
+
+.skills-match-card {
+    background: linear-gradient(135deg, #f0fff4 0%, #ffffff 100%);
+    border: 2px solid #48bb78;
+}
+
+.skills-match-card h3 {
+    color: #38a169;
+}
+
+.matched-skills-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.skill-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 15px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.skill-badge.matched {
+    background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+    color: white;
+}
+
+.match-info {
+    margin: 0;
+    color: #38a169;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.skills-missing-card {
+    background: linear-gradient(135deg, #fff5f5 0%, #ffffff 100%);
+    border: 2px solid #fc8181;
+}
+
+.skills-missing-card h3 {
+    color: #e53e3e;
+}
+
+.missing-skills-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.skill-badge.missing {
+    background: linear-gradient(135deg, #fc8181 0%, #f56565 100%);
+    color: white;
+}
+
+.tip-info {
+    margin: 0;
+    color: #718096;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.tip-info i {
+    color: #ed8936;
+}
+
+@media (max-width: 1024px) {
+    .job-detail-content {
+        grid-template-columns: 1fr;
+    }
+    
+    .job-detail-header {
+        flex-direction: column;
+        gap: 20px;
+        text-align: center;
+    }
+}
+</style>
+{% endblock %}

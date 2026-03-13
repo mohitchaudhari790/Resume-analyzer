@@ -1,0 +1,129 @@
+{% extends 'portal/base.html' %}
+
+{% block title %}Dashboard - AI Resume Portal{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <h1 class="page-title">Dashboard</h1>
+    
+    <div class="stats-grid">
+        <div class="stat-card card-blue">
+            <div class="stat-icon">
+                <i class="fas fa-file-alt"></i>
+            </div>
+            <div class="stat-info">
+                <h3>{{ resumes.count }}</h3>
+                <p>Resumes Uploaded</p>
+            </div>
+        </div>
+        
+        <div class="stat-card card-green">
+            <div class="stat-icon">
+                <i class="fas fa-briefcase"></i>
+            </div>
+            <div class="stat-info">
+                <h3>{{ total_jobs }}</h3>
+                <p>Active Jobs</p>
+            </div>
+        </div>
+        
+        <div class="stat-card card-orange">
+            <div class="stat-icon">
+                <i class="fas fa-paper-plane"></i>
+            </div>
+            <div class="stat-info">
+                <h3>{{ applications.count }}</h3>
+                <p>Applications</p>
+            </div>
+        </div>
+        
+        <div class="stat-card card-purple">
+            <div class="stat-icon">
+                <i class="fas fa-bookmark"></i>
+            </div>
+            <div class="stat-info">
+                <h3>{{ saved_jobs_count }}</h3>
+                <p>Saved Jobs</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <div class="dashboard-section">
+            <h2>Recent Resumes</h2>
+            <div class="card">
+                {% if resumes %}
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Uploaded</th>
+                            <th>ATS Score</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for resume in resumes %}
+                        <tr>
+                            <td>{{ resume.uploaded_at|date:"M d, Y" }}</td>
+                            <td>
+                                <div class="score-badge score-{{ resume.ats_score|floatformat:0 }}">
+                                    {{ resume.ats_score }}%
+                                </div>
+                            </td>
+                            <td>
+                                <a href="{% url 'analyze_resume' resume.id %}" class="btn-small">View Analysis</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p class="empty-state">No resumes uploaded yet. <a href="{% url 'upload_resume' %}">Upload your first resume</a></p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="dashboard-section">
+            <h2>Recent Applications</h2>
+            <div class="card">
+                {% if applications %}
+                <div class="application-list">
+                    {% for app in applications %}
+                    <div class="application-item">
+                        <div class="app-info">
+                            <h4>{{ app.job.title }}</h4>
+                            <p>{{ app.job.company }} • {{ app.applied_at|date:"M d" }}</p>
+                        </div>
+                        <span class="status-badge status-{{ app.status }}">{{ app.get_status_display }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="empty-state">No applications yet. <a href="{% url 'job_listings' %}">Browse jobs</a></p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="quick-actions">
+        <h2>Quick Actions</h2>
+        <div class="action-grid">
+            <a href="{% url 'upload_resume' %}" class="action-card">
+                <i class="fas fa-upload"></i>
+                <h3>Upload Resume</h3>
+                <p>Get AI-powered analysis</p>
+            </a>
+            <a href="{% url 'job_listings' %}" class="action-card">
+                <i class="fas fa-search"></i>
+                <h3>Find Jobs</h3>
+                <p>Browse available positions</p>
+            </a>
+            <a href="{% url 'ai_job_match' %}" class="action-card">
+                <i class="fas fa-robot"></i>
+                <h3>AI Match</h3>
+                <p>Get personalized recommendations</p>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

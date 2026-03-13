@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AI Resume Portal{% endblock %}</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    {% if user.is_authenticated %}
+    <div class="sidebar">
+        <div class="logo">
+            <i class="fas fa-briefcase"></i>
+            <h2>AI Resume Portal</h2>
+        </div>
+        <nav class="nav-menu">
+            <a href="{% url 'dashboard' %}" class="nav-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                <i class="fas fa-home"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="{% url 'upload_resume' %}" class="nav-item {% if request.resolver_match.url_name == 'upload_resume' %}active{% endif %}">
+                <i class="fas fa-upload"></i>
+                <span>Upload Resume</span>
+            </a>
+            <a href="{% url 'saved_resumes' %}" class="nav-item {% if request.resolver_match.url_name == 'saved_resumes' %}active{% endif %}">
+                <i class="fas fa-folder-open"></i>
+                <span>My Resumes</span>
+            </a>
+            <a href="{% url 'job_listings' %}" class="nav-item {% if request.resolver_match.url_name == 'job_listings' %}active{% endif %}">
+                <i class="fas fa-list"></i>
+                <span>Job Listings</span>
+            </a>
+            <a href="{% url 'recommended_jobs' %}" class="nav-item {% if request.resolver_match.url_name == 'recommended_jobs' %}active{% endif %}">
+                <i class="fas fa-star"></i>
+                <span>Recommended Jobs</span>
+            </a>
+            <a href="{% url 'ai_job_match' %}" class="nav-item {% if request.resolver_match.url_name == 'ai_job_match' %}active{% endif %}">
+                <i class="fas fa-robot"></i>
+                <span>AI Job Match</span>
+            </a>
+            <a href="{% url 'saved_jobs' %}" class="nav-item {% if request.resolver_match.url_name == 'saved_jobs' %}active{% endif %}">
+                <i class="fas fa-bookmark"></i>
+                <span>Saved Jobs</span>
+            </a>
+            <a href="{% url 'application_tracker' %}" class="nav-item {% if request.resolver_match.url_name == 'application_tracker' %}active{% endif %}">
+                <i class="fas fa-tasks"></i>
+                <span>Applications</span>
+            </a>
+            <a href="{% url 'profile_settings' %}" class="nav-item {% if request.resolver_match.url_name == 'profile_settings' %}active{% endif %}">
+                <i class="fas fa-user-cog"></i>
+                <span>Profile Settings</span>
+            </a>
+            {% if user.is_staff %}
+            <a href="{% url 'add_job' %}" class="nav-item {% if request.resolver_match.url_name == 'add_job' %}active{% endif %}">
+                <i class="fas fa-plus-circle"></i>
+                <span>Add Job</span>
+            </a>
+            {% endif %}
+            <a href="{% url 'logout' %}" class="nav-item">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+            </a>
+        </nav>
+    </div>
+    {% endif %}
+
+    <div class="main-content {% if not user.is_authenticated %}full-width{% endif %}">
+        {% if user.is_authenticated %}
+        <div class="topbar">
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Search jobs, skills...">
+            </div>
+            <div class="user-info">
+                <span>Welcome, {{ user.first_name|default:user.username }}</span>
+                <i class="fas fa-user-circle"></i>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="content-area">
+            {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    {{ message }}
+                    <span class="close-btn">&times;</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% block content %}
+            {% endblock %}
+        </div>
+    </div>
+
+    <script src="{% static 'js/script.js' %}"></script>
+</body>
+</html>

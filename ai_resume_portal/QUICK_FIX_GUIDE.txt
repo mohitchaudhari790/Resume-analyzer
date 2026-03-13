@@ -1,0 +1,119 @@
+╔══════════════════════════════════════════════════════════════════════════╗
+║                    DJANGO TEMPLATE FILTER FIX                            ║
+║                         Quick Reference Card                             ║
+╚══════════════════════════════════════════════════════════════════════════╝
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│ PROBLEM FIXED                                                            │
+├──────────────────────────────────────────────────────────────────────────┤
+│ Error: 'custom_filters' is not a registered tag library                 │
+│ Cause: Missing custom template filter for multiplication                │
+│ Solution: Created custom_filters.py with mul filter                     │
+└──────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│ FILES CREATED                                                            │
+├──────────────────────────────────────────────────────────────────────────┤
+│ ✓ portal/templatetags/__init__.py                                       │
+│ ✓ portal/templatetags/custom_filters.py                                 │
+│ ✓ portal/management/commands/verify_filters.py                          │
+│ ✓ TEMPLATE_FILTER_INTEGRATION.md (documentation)                        │
+└──────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│ IMMEDIATE ACTION REQUIRED                                                │
+├──────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  1. STOP Django server (Ctrl+C)                                         │
+│                                                                          │
+│  2. RUN verification command:                                           │
+│     python manage.py verify_filters                                     │
+│                                                                          │
+│  3. RESTART Django server:                                              │
+│     python manage.py runserver                                          │
+│                                                                          │
+│  4. TEST the analysis page:                                             │
+│     http://127.0.0.1:8000/analyze-resume/12/                           │
+│                                                                          │
+└──────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│ CUSTOM FILTERS AVAILABLE                                                 │
+├──────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  mul              - Multiply: {{ value|mul:5.34 }}                      │
+│  div              - Divide: {{ value|div:2 }}                           │
+│  sub              - Subtract: {{ value|sub:10 }}                        │
+│  percentage       - Calculate %: {{ value|percentage:total }}           │
+│  default_if_none  - Default: {{ value|default_if_none:0 }}             │
+│  get_score_color  - Color class: {{ score|get_score_color }}           │
+│  format_number    - Format: {{ 1000000|format_number }}                │
+│  round_decimal    - Round: {{ value|round_decimal:2 }}                 │
+│                                                                          │
+└──────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│ TEMPLATE USAGE                                                           │
+├──────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  {% load custom_filters %}  ← Add at top of template                   │
+│                                                                          │
+│  <!-- ATS Score Circle -->                                              │
+│  <circle                                                                 │
+│    stroke-dasharray="{{ resume.ats_score|default_if_none:0|mul:5.34 }} 534"│
+│    stroke="#48bb78"                                                      │
+│  />                                                                      │
+│                                                                          │
+└──────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│ HOW IT WORKS                                                             │
+├──────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  Circle Circumference = 2 × π × radius = 534                           │
+│  Score 85 → 85 × 5.34 = 453.9                                          │
+│  Result: 85% of circle filled (453.9 / 534)                            │
+│                                                                          │
+│  Color Coding:                                                           │
+│    ≥ 80: Green (#48bb78) - Excellent                                   │
+│    ≥ 60: Orange (#ed8936) - Good                                       │
+│    < 60: Red (#f56565) - Needs Improvement                             │
+│                                                                          │
+└──────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│ TROUBLESHOOTING                                                          │
+├──────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  Still seeing error?                                                     │
+│                                                                          │
+│  1. Check portal is in INSTALLED_APPS (settings.py)                    │
+│  2. Clear Python cache: find . -name __pycache__ -exec rm -r {} +     │
+│  3. Restart server completely (not just reload)                         │
+│  4. Check browser console for JavaScript errors                         │
+│  5. Verify file structure matches documentation                         │
+│                                                                          │
+└──────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│ SUCCESS INDICATORS                                                       │
+├──────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  ✓ No template errors on analysis page                                 │
+│  ✓ ATS score circle displays and animates                              │
+│  ✓ Score number shows correctly (0-100)                                │
+│  ✓ Circle color matches score level                                    │
+│  ✓ Null scores show as 0 (no crash)                                    │
+│                                                                          │
+└──────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│ DOCUMENTATION                                                            │
+├──────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  Full guide: TEMPLATE_FILTER_INTEGRATION.md                            │
+│  Test command: python manage.py verify_filters                         │
+│                                                                          │
+└──────────────────────────────────────────────────────────────────────────┘
+
+                        ⚡ RESTART SERVER NOW ⚡

@@ -1,0 +1,727 @@
+{% extends 'portal/base.html' %}
+{% load custom_filters %}
+
+{% block title %}Resume Analysis{% endblock %}
+
+{% block content %}
+<div class="analysis-wrapper">
+    <div class="analysis-header">
+        <h1><i class="fas fa-chart-line"></i> AI Resume Analysis</h1>
+        <p>Comprehensive analysis of your resume with job recommendations</p>
+    </div>
+    
+    <!-- ATS Score Section -->
+    <div class="score-section">
+        <div class="score-card-main">
+            <div class="score-content">
+                <h2>ATS Compatibility Score</h2>
+                <div class="score-circle-large">
+                    <svg width="200" height="200">
+                        <circle cx="100" cy="100" r="85" fill="none" stroke="#e2e8f0" stroke-width="15"/>
+                        <circle cx="100" cy="100" r="85" fill="none" 
+                                stroke="{% if resume.ats_score|default_if_none:0 >= 80 %}#48bb78{% elif resume.ats_score|default_if_none:0 >= 60 %}#ed8936{% else %}#f56565{% endif %}" 
+                                stroke-width="15"
+                                stroke-dasharray="{{ resume.ats_score|default_if_none:0|mul:5.34 }} 534" 
+                                stroke-linecap="round" 
+                                transform="rotate(-90 100 100)"
+                                class="score-progress"/>
+                    </svg>
+                    <div class="score-value">
+                        <span class="score-number">{{ resume.ats_score|default_if_none:0 }}</span>
+                        <span class="score-max">/100</span>
+                    </div>
+                </div>
+                <div class="score-status">
+                    {% if resume.ats_score|default_if_none:0 >= 80 %}
+                    <span class="status-badge status-excellent">
+                        <i class="fas fa-check-circle"></i> Excellent
+                    </span>
+                    <p>Your resume is highly optimized for ATS systems!</p>
+                    {% elif resume.ats_score|default_if_none:0 >= 60 %}
+                    <span class="status-badge status-good">
+                        <i class="fas fa-thumbs-up"></i> Good
+                    </span>
+                    <p>Your resume has decent ATS compatibility. Follow suggestions to improve.</p>
+                    {% else %}
+                    <span class="status-badge status-needs-work">
+                        <i class="fas fa-exclamation-triangle"></i> Needs Improvement
+                    </span>
+                    <p>Your resume needs optimization. Check recommendations below.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="quick-stats">
+            <div class="stat-box">
+                <i class="fas fa-code"></i>
+                <h3>{{ resume.extracted_skills.count }}</h3>
+                <p>Skills Detected</p>
+            </div>
+            <div class="stat-box">
+                <i class="fas fa-briefcase"></i>
+                <h3>{{ total_jobs_analyzed }}</h3>
+                <p>Jobs Analyzed</p>
+            </div>
+            <div class="stat-box">
+                <i class="fas fa-star"></i>
+                <h3>{{ job_recommendations|length }}</h3>
+                <p>Top Matches</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Detected Skills -->
+    <div class="analysis-section">
+        <div class="section-header">
+            <h2><i class="fas fa-check-circle"></i> Detected Skills</h2>
+            <span class="count-badge">{{ resume.extracted_skills.count }} skills</span>
+        </div>
+        <div class="skills-grid">
+            {% for skill in resume.extracted_skills.all %}
+            <div class="skill-item">
+                <i class="fas fa-check"></i>
+                <span>{{ skill.skill_name }}</span>
+            </div>
+            {% empty %}
+            <p class="empty-message">No skills detected. Make sure your resume includes technical skills.</p>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- Job Recommendations -->
+    <div class="analysis-section">
+        <div class="section-header">
+            <h2><i class="fas fa-robot"></i> AI Job Recommendations</h2>
+            <p class="section-subtitle">Based on your skills, here are the best matching jobs</p>
+        </div>
+        
+        {% if job_recommendations %}
+        <div class="recommendations-list">
+            {% for rec in job_recommendations %}
+            <div class="recommendation-card">
+                <div class="rec-header">
+                    <div class="rec-info">
+                        <h3>{{ rec.job.title }}</h3>
+                        <p class="company"><i class="fas fa-building"></i> {{ rec.job.company }}</p>
+                        <p class="location"><i class="fas fa-map-marker-alt"></i> {{ rec.job.location }}</p>
+                    </div>
+                    <div class="match-indicator">
+                        <div class="match-circle {% if rec.match_score >= 70 %}match-high{% elif rec.match_score >= 50 %}match-medium{% else %}match-low{% endif %}">
+                            <span class="match-percent">{{ rec.match_score }}%</span>
+                            <span class="match-label">Match</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="rec-body">
+                    <div class="skills-analysis">
+                        <div class="matched-skills">
+                            <h4><i class="fas fa-check-double"></i> Matched Skills ({{ rec.matched_skills|length }}/{{ rec.total_required }})</h4>
+                            <div class="skill-tags">
+                                {% for skill in rec.matched_skills|slice:":8" %}
+                                <span class="skill-tag matched">{{ skill }}</span>
+                                {% endfor %}
+                                {% if rec.matched_skills|length > 8 %}
+                                <span class="skill-tag more">+{{ rec.matched_skills|length|add:"-8" }} more</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        {% if rec.missing_skills %}
+                        <div class="missing-skills">
+                            <h4><i class="fas fa-exclamation-circle"></i> Skills to Learn ({{ rec.missing_skills|length }})</h4>
+                            <div class="skill-tags">
+                                {% for skill in rec.missing_skills|slice:":8" %}
+                                <span class="skill-tag missing">{{ skill }}</span>
+                                {% endfor %}
+                                {% if rec.missing_skills|length > 8 %}
+                                <span class="skill-tag more">+{{ rec.missing_skills|length|add:"-8" }} more</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="rec-actions">
+                        <a href="{% url 'job_detail' rec.job.id %}" class="btn-view-job">
+                            <i class="fas fa-eye"></i> View Job Details
+                        </a>
+                        <a href="{% url 'apply_job' rec.job.id %}" class="btn-apply-job">
+                            <i class="fas fa-paper-plane"></i> Apply Now
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-recommendations">
+            <i class="fas fa-inbox"></i>
+            <h3>No job recommendations available</h3>
+            <p>There are no active jobs in the system. Check back later!</p>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Improvement Suggestions -->
+    {% if analysis %}
+    <div class="analysis-section">
+        <div class="section-header">
+            <h2><i class="fas fa-lightbulb"></i> Improvement Suggestions</h2>
+        </div>
+        <div class="suggestions-grid">
+            {% for suggestion in analysis.grammar_suggestions.splitlines %}
+            <div class="suggestion-card">
+                <i class="fas fa-arrow-right"></i>
+                <p>{{ suggestion }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Action Buttons -->
+    <div class="action-section">
+        <a href="{% url 'upload_resume' %}" class="btn-action btn-secondary">
+            <i class="fas fa-upload"></i> Upload New Resume
+        </a>
+        <a href="{% url 'job_listings' %}" class="btn-action btn-primary">
+            <i class="fas fa-search"></i> Browse All Jobs
+        </a>
+        <a href="{% url 'dashboard' %}" class="btn-action btn-outline">
+            <i class="fas fa-home"></i> Back to Dashboard
+        </a>
+    </div>
+</div>
+
+<style>
+.analysis-wrapper {
+    padding: 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.analysis-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.analysis-header h1 {
+    font-size: 36px;
+    color: #2d3748;
+    margin: 0 0 10px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+}
+
+.analysis-header p {
+    color: #718096;
+    font-size: 16px;
+}
+
+.score-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 25px;
+    margin-bottom: 40px;
+}
+
+.score-card-main {
+    background: white;
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    text-align: center;
+}
+
+.score-content h2 {
+    font-size: 24px;
+    color: #2d3748;
+    margin: 0 0 30px 0;
+}
+
+.score-circle-large {
+    position: relative;
+    display: inline-block;
+    margin: 20px 0;
+}
+
+.score-progress {
+    transition: stroke-dasharray 1s ease;
+}
+
+.score-value {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+
+.score-number {
+    font-size: 48px;
+    font-weight: 700;
+    color: #2d3748;
+}
+
+.score-max {
+    font-size: 24px;
+    color: #a0aec0;
+}
+
+.score-status {
+    margin-top: 20px;
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 25px;
+    font-weight: 600;
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+
+.status-excellent {
+    background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+    color: white;
+}
+
+.status-good {
+    background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+    color: white;
+}
+
+.status-needs-work {
+    background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+    color: white;
+}
+
+.score-status p {
+    color: #718096;
+    margin: 10px 0 0 0;
+}
+
+.quick-stats {
+    display: grid;
+    grid-template-rows: repeat(3, 1fr);
+    gap: 15px;
+}
+
+.stat-box {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 25px;
+    border-radius: 15px;
+    text-align: center;
+    box-shadow: 0 5px 20px rgba(102, 126, 234, 0.3);
+}
+
+.stat-box i {
+    font-size: 32px;
+    margin-bottom: 10px;
+}
+
+.stat-box h3 {
+    font-size: 36px;
+    margin: 10px 0 5px 0;
+}
+
+.stat-box p {
+    font-size: 14px;
+    opacity: 0.9;
+    margin: 0;
+}
+
+.analysis-section {
+    background: white;
+    border-radius: 20px;
+    padding: 30px;
+    margin-bottom: 30px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.section-header h2 {
+    font-size: 24px;
+    color: #2d3748;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.section-subtitle {
+    color: #718096;
+    font-size: 14px;
+    margin: 5px 0 0 0;
+}
+
+.count-badge {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.skills-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.skill-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 18px;
+    background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+    border-radius: 10px;
+    border-left: 4px solid #667eea;
+    transition: all 0.3s ease;
+}
+
+.skill-item:hover {
+    transform: translateX(5px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.skill-item i {
+    color: #48bb78;
+    font-size: 16px;
+}
+
+.skill-item span {
+    color: #2d3748;
+    font-weight: 500;
+}
+
+.recommendations-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.recommendation-card {
+    background: linear-gradient(135deg, #f7fafc 0%, #ffffff 100%);
+    border-radius: 15px;
+    border: 2px solid #e2e8f0;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.recommendation-card:hover {
+    border-color: #667eea;
+    box-shadow: 0 8px 30px rgba(102, 126, 234, 0.2);
+    transform: translateY(-3px);
+}
+
+.rec-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 25px;
+    background: white;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.rec-info h3 {
+    font-size: 22px;
+    color: #2d3748;
+    margin: 0 0 10px 0;
+}
+
+.rec-info p {
+    margin: 5px 0;
+    color: #718096;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.match-circle {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 5px solid;
+}
+
+.match-high {
+    background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+    border-color: #38a169;
+    color: white;
+}
+
+.match-medium {
+    background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+    border-color: #dd6b20;
+    color: white;
+}
+
+.match-low {
+    background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+    border-color: #e53e3e;
+    color: white;
+}
+
+.match-percent {
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.match-label {
+    font-size: 12px;
+    opacity: 0.9;
+}
+
+.rec-body {
+    padding: 25px;
+}
+
+.skills-analysis {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.matched-skills, .missing-skills {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    border: 2px solid #e2e8f0;
+}
+
+.matched-skills h4, .missing-skills h4 {
+    font-size: 16px;
+    margin: 0 0 15px 0;
+    color: #2d3748;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.matched-skills h4 i {
+    color: #48bb78;
+}
+
+.missing-skills h4 i {
+    color: #f56565;
+}
+
+.skill-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.skill-tag {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.skill-tag.matched {
+    background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+    color: white;
+}
+
+.skill-tag.missing {
+    background: linear-gradient(135deg, #fc8181 0%, #f56565 100%);
+    color: white;
+}
+
+.skill-tag.more {
+    background: #e2e8f0;
+    color: #4a5568;
+}
+
+.rec-actions {
+    display: flex;
+    gap: 15px;
+    padding-top: 20px;
+    border-top: 2px solid #e2e8f0;
+}
+
+.btn-view-job, .btn-apply-job {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px 20px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-view-job {
+    background: #4a5568;
+    color: white;
+}
+
+.btn-view-job:hover {
+    background: #2d3748;
+    transform: translateY(-2px);
+}
+
+.btn-apply-job {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-apply-job:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+}
+
+.empty-recommendations {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.empty-recommendations i {
+    font-size: 80px;
+    color: #cbd5e0;
+    margin-bottom: 20px;
+}
+
+.empty-recommendations h3 {
+    font-size: 24px;
+    color: #2d3748;
+    margin: 0 0 10px 0;
+}
+
+.empty-recommendations p {
+    color: #718096;
+}
+
+.suggestions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 15px;
+}
+
+.suggestion-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+    padding: 20px;
+    background: linear-gradient(135deg, #fff5f5 0%, #ffffff 100%);
+    border-radius: 12px;
+    border-left: 4px solid #ed8936;
+}
+
+.suggestion-card i {
+    color: #ed8936;
+    font-size: 18px;
+    margin-top: 2px;
+}
+
+.suggestion-card p {
+    margin: 0;
+    color: #2d3748;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.action-section {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 40px;
+}
+
+.btn-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 28px;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 15px;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 30px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary {
+    background: #4a5568;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #2d3748;
+    transform: translateY(-2px);
+}
+
+.btn-outline {
+    background: white;
+    color: #667eea;
+    border: 2px solid #667eea;
+}
+
+.btn-outline:hover {
+    background: #667eea;
+    color: white;
+    transform: translateY(-2px);
+}
+
+@media (max-width: 1024px) {
+    .score-section {
+        grid-template-columns: 1fr;
+    }
+    
+    .skills-analysis {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .rec-header {
+        flex-direction: column;
+        gap: 20px;
+        text-align: center;
+    }
+    
+    .rec-actions {
+        flex-direction: column;
+    }
+    
+    .action-section {
+        flex-direction: column;
+    }
+}
+</style>
+{% endblock %}

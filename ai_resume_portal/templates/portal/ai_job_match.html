@@ -1,0 +1,60 @@
+{% extends 'portal/base.html' %}
+
+{% block title %}AI Job Match{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <h1 class="page-title">AI-Powered Job Recommendations</h1>
+    
+    <div class="match-intro card">
+        <i class="fas fa-robot"></i>
+        <p>Based on your resume analysis, here are the best matching jobs for you</p>
+    </div>
+    
+    <div class="job-matches">
+        {% for item in job_matches %}
+        <div class="job-match-card card">
+            <div class="match-header">
+                <div class="match-score-circle score-{{ item.match_score|floatformat:0 }}">
+                    {{ item.match_score }}%
+                </div>
+                <div class="job-info">
+                    <h3>{{ item.job.title }}</h3>
+                    <p>{{ item.job.company }} • {{ item.job.location }}</p>
+                </div>
+            </div>
+            
+            <div class="match-progress">
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: {{ item.match_score }}%"></div>
+                </div>
+            </div>
+            
+            <div class="job-skills">
+                {% for skill in item.job.required_skills.split|slice:":6" %}
+                <span class="skill-tag">{{ skill }}</span>
+                {% endfor %}
+            </div>
+            
+            <div class="match-footer">
+                <span class="salary">
+                    {% if item.job.salary_min %}
+                    ${{ item.job.salary_min|floatformat:0 }} - ${{ item.job.salary_max|floatformat:0 }}
+                    {% else %}
+                    Competitive
+                    {% endif %}
+                </span>
+                <a href="{% url 'job_detail' item.job.id %}" class="btn btn-primary">View Job</a>
+            </div>
+        </div>
+        {% empty %}
+        <div class="empty-state-large">
+            <i class="fas fa-search"></i>
+            <h2>No matching jobs found</h2>
+            <p>Upload your resume to get personalized job recommendations</p>
+            <a href="{% url 'upload_resume' %}" class="btn btn-primary">Upload Resume</a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends 'portal/base.html' %}
+
+{% block title %}Upload Resume{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <h1 class="page-title">Upload Your Resume</h1>
+    
+    <div class="upload-section">
+        <div class="card upload-card">
+            <div class="upload-icon">
+                <i class="fas fa-cloud-upload-alt"></i>
+            </div>
+            <h2>Upload Resume for AI Analysis</h2>
+            <p>Supported formats: PDF, DOCX</p>
+            
+            <form method="post" enctype="multipart/form-data" class="upload-form">
+                {% csrf_token %}
+                <div class="file-input-wrapper">
+                    {{ form.file }}
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-upload"></i> Upload & Analyze
+                </button>
+            </form>
+        </div>
+        
+        <div class="info-card">
+            <h3>What happens next?</h3>
+            <ul class="feature-list">
+                <li><i class="fas fa-check-circle"></i> AI extracts your skills and experience</li>
+                <li><i class="fas fa-check-circle"></i> Calculate ATS compatibility score</li>
+                <li><i class="fas fa-check-circle"></i> Get improvement suggestions</li>
+                <li><i class="fas fa-check-circle"></i> Match with relevant jobs</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
