@@ -2,8 +2,9 @@ services:
   - type: web
     name: ai-resume-portal
     env: python
-    buildCommand: "./build.sh"
-    startCommand: "gunicorn config.wsgi:application"
+    rootDir: ai_resume_portal
+    buildCommand: "chmod +x build.sh && ./build.sh"
+    startCommand: "gunicorn config.wsgi:application --bind 0.0.0.0:$PORT"
     envVars:
       - key: PYTHON_VERSION
         value: 3.12.3
@@ -17,12 +18,3 @@ services:
         value: True
       - key: RENDER
         value: True
-      - key: DATABASE_URL
-        fromDatabase:
-          name: ai-resume-db
-          property: connectionString
-
-databases:
-  - name: ai-resume-db
-    databaseName: ai_resume_db
-    user: ai_resume_user
